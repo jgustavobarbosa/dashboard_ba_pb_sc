@@ -129,7 +129,26 @@
       }).join('');
   }
 
+  function renderTjpb() {
+    var box = $('tjpb-extra');
+    var on = st.trib === 'TJPB' && st.tema === 'SAUDE';
+    box.style.display = on ? 'flex' : 'none';
+    if (!on) return;
+    var p = T.TJPB, a25 = p.nov.slice(0, 12).reduce(function (a, v) { return a + v; }, 0);
+    var limP = p.limDef / (p.limDef + p.limIndef) * 100, procP = p.proc / (p.proc + p.improc) * 100, acP = p.homol / p.jul * 100;
+    var linhas = [
+      ['Casos novos', fmt(p.ent) + ' em jan–ago/2026; ' + fmt(a25) + ' em 2025', '1.800 a 2.300 por ano', 'Diverge cerca de 3,5×. A faixa parece ser as 10 mil de 2014–2019 divididas por cinco anos, sem fonte própria. Usar o painel.'],
+      ['Liminares deferidas', pct(limP) + ' (' + fmt(p.limDef) + ' de ' + fmt(p.limDef + p.limIndef) + ')', '73% (SUS) · 69,5% (planos)', 'Coerente. A fonte é média regional do Nordeste (CNJ), não específica do TJPB; não consegui abrir a página.'],
+      ['Procedência final', pct(procP) + ' entre decisões de mérito', '84% (SUS) · 87% (planos)', 'Bases diferentes: o painel soma todas as ações; os 84% e 87% parecem ser de ações com liminar deferida. Não verificado.'],
+      ['Acordos / conciliação', pct(acP, 2) + ' dos julgados (homologação de acordo)', 'abaixo de 1% (saúde pública)', 'Compatível: o painel mistura saúde pública e suplementar.'],
+      ['NatJus', 'n/d no painel', '2.331 pareceres e notas técnicas', 'Não aparece na página do TJPB que consegui ler. Confirmar com o tribunal.']
+    ];
+    $('tjpb-tbl').innerHTML = ['Indicador', 'Painel CNJ (capturas)', 'Fonte complementar informada', 'Leitura'].map(function (h) { return '<div class="h">' + h + '</div>'; }).join('') +
+      linhas.map(function (l) { return l.map(function (c, i) { return '<div' + (i === 0 ? ' style="font-weight:600"' : '') + '>' + c + '</div>'; }).join(''); }).join('');
+  }
+
   function render() {
+    renderTjpb();
     pills($('f-trib'), [['AGR', 'Agrupado'], ['TJBA', 'TJBA'], ['TJPB', 'TJPB'], ['TJSC', 'TJSC']], 'trib');
     pills($('f-tema'), [['SAUDE', 'Saúde'], ['SP', 'Saúde Pública']], 'tema');
     $('ctx').textContent = (st.trib === 'AGR' ? 'Agrupado' : st.trib) + ' · ' + (st.tema === 'SP' ? 'Saúde Pública' : 'Saúde');
