@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Judicialização da Saúde: TJBA, TJPB, TJSC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<div class="row">
+  <div style="display:flex;flex-direction:column;gap:6px;min-width:280px">
+    <div class="eyebrow">RAY.IA · Visão amostral</div>
+    <h1>Judicialização da saúde: TJBA, TJPB e TJSC</h1>
+    <div class="muted" style="font-size:14px">Dados até 31/08/2026 · processos novos · base: painel de saúde do CNJ (capturas de tela) · <span id="ctx"></span></div>
+  </div>
+  <div class="badge">Amostra para validação da abordagem. Valores em R$ são cenários editáveis, não dados oficiais.</div>
+</div>
+
+<div class="card filters" style="padding:16px 20px">
+  <div><div class="lbl muted">Tribunal</div><div id="f-trib" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>
+  <div><div class="lbl muted">Tema</div><div id="f-tema" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>
+  <div class="small muted" style="max-width:420px">Saúde Pública está disponível só para o TJBA nesta amostra. Filtros do painel do CNJ (grau, natureza, município, órgão julgador) entram com o datalake.</div>
+</div>
+
+<div id="sem-dados" class="card" style="display:none;border-style:dashed">
+  <div style="font-size:18px;font-weight:600">Sem dados para esta combinação na amostra</div>
+  <div class="muted" style="font-size:14px;line-height:1.5">Tema Saúde Pública só foi capturado para o TJBA. Selecione TJBA ou volte ao tema Saúde.</div>
+</div>
+
+<div id="com-dados" style="display:flex;flex-direction:column;gap:24px">
+
+  <div id="kpis" class="grid g220"></div>
+
+  <div class="card" style="gap:12px">
+    <div class="row" style="align-items:baseline">
+      <h2>Casos novos e baixados por mês</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:13px;color:#C8D6E4">
+        <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:14px;height:4px;border-radius:2px;background:#5EB1FF;display:inline-block"></span><span id="leg-nov"></span></span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:14px;height:4px;border-radius:2px;background:#FFA94D;display:inline-block"></span><span id="leg-bx"></span></span>
+      </div>
+    </div>
+    <svg id="serie" viewBox="0 0 1000 320" role="img" style="width:100%;height:auto;display:block"></svg>
+    <div class="small muted">Eixo parte do zero. Meses de 2026 conferem com os totais de entradas e saídas do painel; pontos de 2025 sem rótulo no print foram lidos do gráfico (aproximados).</div>
+    <details style="border-top:1px solid #234563;padding-top:12px">
+      <summary>Ver série mensal em tabela</summary>
+      <div class="scroll" style="max-height:360px;overflow:auto;margin-top:8px">
+        <div id="meses" class="tbl" style="grid-template-columns:repeat(4,1fr);min-width:420px"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="row" style="align-items:baseline">
+      <h2 id="jul-tit"></h2>
+      <div style="font-size:14px;color:#C8D6E4">Tempo médio até o primeiro julgamento: <strong><span id="jul-tm"></span> dias</strong></div>
+    </div>
+    <div id="jul-bar" class="stack" role="img" aria-label="Distribuição dos julgados por resultado"></div>
+    <div id="jul-leg" class="grid g220"></div>
+  </div>
+
+  <div class="card" style="gap:20px">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <h2>Estimativa de valores em função da quantidade</h2>
+      <div class="small warn" style="font-size:13px">Cenário a calibrar: ticket inicial de R$ 18 mil por processo (referência informada pela RAY.IA, ainda não validada no datalake) aplicado só aos casos novos contra o poder público. Não inclui tratamentos de alto custo nem continuidade de casos antigos.</div>
+    </div>
+    <div class="grid g300">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label for="tk" style="font-size:14px;color:#C8D6E4">Ticket médio por processo contra o poder público: <strong id="tk-lbl"></strong></label>
+        <input id="tk" type="range" min="2000" max="100000" step="1000" value="18000">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div id="share-box">
+          <label for="share" style="font-size:14px;color:#C8D6E4">Parcela dos casos de Saúde contra o poder público: <strong id="share-lbl"></strong></label>
+          <input id="share" type="range" min="5" max="100" step="1" value="20">
+          <div class="small muted">Ponto de partida de 20%: no TJBA, Saúde Pública foi 20% das entradas de Saúde em 2026 (9.132 de 45.713). O restante inclui saúde suplementar (planos), que não é gasto do estado.</div>
+        </div>
+        <div id="share-fixo" style="display:none;font-size:14px;color:#C8D6E4;line-height:1.5">Tema Saúde Pública: todos os casos novos entram como contra o poder público. Parte deles pode ser contra municípios ou a União, não só o estado.</div>
+      </div>
+    </div>
+    <div id="vals" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))"></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:14px;font-weight:600">Sensibilidade ao ticket médio</div>
+      <div class="scroll"><div id="sens" class="tbl" style="grid-template-columns:1fr 1.3fr 1.3fr;min-width:480px"></div></div>
+    </div>
+    <div class="small muted" style="line-height:1.6">Estimativa = casos novos de 2026 × parcela contra o poder público × ticket. Volume de casos novos não captura o gasto recorrente de tratamentos contínuos iniciados antes, por isso as referências abaixo servem de teste de realidade.</div>
+  </div>
+
+</div>
+
+<div class="card">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <h2>Referências públicas de gasto (teste de realidade)</h2>
+    <div class="muted" style="font-size:13px;line-height:1.5">Números divulgados pelos próprios governos e órgãos de controle. Anos e bases diferem entre estados; não somar.</div>
+  </div>
+  <div class="grid g260">
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#5EB1FF">Bahia · 2025</div><div style="font-size:24px;font-weight:700">R$ 458 mi</div><div class="small muted">Gasto da Sesab com demandas judiciais, cerca de 40% dos R$ 1,122 bi em medicamentos distribuídos. Oncologia: R$ 153 mi (33%). <a href="https://www.conass.org.br/?p=56333">CONASS</a></div></div>
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#7FD8CE">Santa Catarina · 2024</div><div style="font-size:24px;font-weight:700">R$ 749 mi</div><div class="small muted">Mais de 9% do orçamento da saúde; mais de 16 mil pacientes recorreram à Justiça até nov/2025. Em 2017 foram R$ 151 mi (4,69%). <a href="https://www.santacatarinaempauta.com.br/2026/04/17/tce-sc-cobra-reacao-do-estado-para-recuperar-ate-r-2-bilhoes-gastos-com-judicializacao-da-saude/">TCE/SC</a> · <a href="https://www.tcesc.tc.br/radiover/57229">auditoria 2020</a></div></div>
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#FFA94D">Paraíba · sem série atual</div><div style="font-size:24px;font-weight:700">n/d</div><div class="small muted">Não achei gasto recente publicado. O dado mais próximo é de 2014: cerca de R$ 5 mi por mês e 40 ações por dia. Precisa vir da SES-PB. <a href="https://jornaldaparaiba.com.br/cotidiano/ses-recebe-40-acoes-judiciais-por-dia-para-requerer-servicos-nao-prestados">Jornal da Paraíba</a></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <h2>Medicamentos e tratamentos mais demandados</h2>
+    <div class="warn" style="font-size:13px;line-height:1.5">Ranking nominal por estado não está publicado em fonte aberta que eu tenha conseguido ler. Abaixo, o que existe; o ranking completo depende do datalake local ou de pedido às secretarias.</div>
+  </div>
+  <div class="grid g260">
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#5EB1FF">Bahia</div><div style="font-size:13px;line-height:1.6;color:#C8D6E4">Por custo: oncologia, 33% do gasto judicial em 2025. Por número de demandas: transtorno do espectro autista e internação compulsória. Regiões com mais demandas: Salvador, Serrinha e Jacobina.</div></div>
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#7FD8CE">Santa Catarina</div><div style="font-size:13px;line-height:1.6;color:#C8D6E4">Medicamentos foram 87,4% de 28.501 pedidos judiciais em 2018. Na auditoria de 2020, dos 25 produtos mais pedidos, 6 (cerca de R$ 16 mi) já eram do SUS. Os nomes não saíram na nota.</div></div>
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#FFA94D">Paraíba</div><div style="font-size:13px;line-height:1.6;color:#C8D6E4">Categorias citadas em 2014: medicamentos, procedimentos e honorários médicos. Sem ranking nominal recente.</div></div>
+    <div class="inner"><div style="font-size:13px;font-weight:600;color:#B79CFF">Brasil (União)</div><div style="font-size:13px;line-height:1.6;color:#C8D6E4">Dez medicamentos mais caros: R$ 1,84 bi em ações individuais até ago/2025; o Elevedys (terapia gênica para Duchenne) responde por cerca de um quinto. Nos últimos cinco anos, 70% do gasto federal foi para dez medicamentos. <a href="https://medicinasa.com.br/judicializacao-medicamentos-caros/">Medicina S/A</a></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <h2>Comparativo entre tribunais</h2>
+    <div class="muted" style="font-size:13px">Tema Saúde (total), 2026 até 31/08. Independe do filtro de tribunal.</div>
+  </div>
+  <div id="cmp" class="grid g260" style="gap:20px"></div>
+  <div class="scroll"><div id="tbl" class="tbl" style="grid-template-columns:0.8fr repeat(7,1fr)"></div></div>
+</div>
+
+<div class="small muted" style="line-height:1.6;border-top:1px solid #234563;padding-top:16px">Fonte: painel de saúde do CNJ (Justiça em Números), capturas de tela, dados até 31/08/2026. Agrupado: somas dos três tribunais; índices e tempos médios recalculados como média ponderada (entradas, pendentes, baixados ou julgados). Procedência (mérito) = procedentes ÷ (procedentes + improcedentes).</div>
+
+</div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
